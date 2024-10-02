@@ -1,3 +1,3 @@
-import {createEvent}  from "./newEvent";
+import { createEvent } from './newEvent';
 
-export {createEvent}
+export { createEvent };

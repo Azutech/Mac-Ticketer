@@ -4,21 +4,23 @@ import { StatusCodes } from 'http-status-codes';
 
 const eventclient = new PrismaClient().event;
 
-export const createEvent = async (req: Request, res: Response): Promise<any> => {
-
+export const createEvent = async (
+	req: Request,
+	res: Response,
+): Promise<any> => {
 	const { name, totalTickets } = req.body;
 	try {
-		
-
 		if (!name || typeof name !== 'string' || name.trim() === '') {
-			throw new Error ('Invalid event name');
-			
-		  }
-	  
-		  if (!totalTickets || typeof totalTickets !== 'number' || totalTickets <= 0) {
-			throw new Error ('Invalid number of tickets');
-			
-		  }
+			throw new Error('Invalid event name');
+		}
+
+		if (
+			!totalTickets ||
+			typeof totalTickets !== 'number' ||
+			totalTickets <= 0
+		) {
+			throw new Error('Invalid number of tickets');
+		}
 
 		// Create a new event
 		const event = await eventclient.create({
@@ -35,7 +37,10 @@ export const createEvent = async (req: Request, res: Response): Promise<any> => 
 		}
 
 		// Return success response
-		res.status(StatusCodes.CREATED).json({ msg: 'Event Initialized', data: event });
+		res.status(StatusCodes.CREATED).json({
+			msg: 'Event Initialized',
+			data: event,
+		});
 	} catch (err: any) {
 		// Log and return an error response
 		console.dir(err);
@@ -49,6 +54,5 @@ export const createEvent = async (req: Request, res: Response): Promise<any> => 
 			? statusMap[err.message]
 			: StatusCodes.INTERNAL_SERVER_ERROR;
 		return res.status(statusCode).json({ error: err.message });
-	
 	}
 };

@@ -2,7 +2,6 @@ import express, { Application, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { config } from 'dotenv';
 
-
 config();
 
 import { PORT } from './utils/config';

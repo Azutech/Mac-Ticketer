@@ -34,10 +34,11 @@ model Booking {
 }
 
 model WaitingList {
-  id      String @id @default(uuid())
-  userId  String
-  eventId String
-  event   Event  @relation(fields: [eventId], references: [id])
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model User {
