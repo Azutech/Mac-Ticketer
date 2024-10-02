@@ -10,11 +10,9 @@ datasource db {
 }
 
 model Event {
-  id              Int         @id @default(uuid())
+  id              String         @id @default(uuid())
   name            String
   totalTickets    Int
   availableTickets Int
   createdAt DateTime @default(now())
-  bookings        Booking[]
-  waitingList     WaitingList[]
 }
