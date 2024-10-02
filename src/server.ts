@@ -5,15 +5,13 @@ import { config } from 'dotenv';
 config();
 
 import { PORT } from './utils/config';
-
+import { routes } from './routes';
 
 const server: Application = express();
 
-
-
 server.use(express.json());
 //
-// server.use('/api/v1', routes);
+server.use('/api/v1', routes);
 server.use(express.urlencoded({ extended: true }));
 
 server.get('/', (req: Request, res: Response) => {
@@ -27,6 +25,5 @@ server.get('*', (req: Request, res: Response) => {
 server.listen(PORT, () => {
 	console.log(`Mac-Ticketer is listening at http://localhost:${PORT} 🚀🚀`);
 });
-
 
 export default { server };
