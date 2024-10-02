@@ -8,12 +8,13 @@ datasource db {
 }
 
 model Event {
-  id               String    @id @default(uuid())
+  id               String        @id @default(uuid())
   name             String
   totalTickets     Int
   availableTickets Int
-  createdAt        DateTime  @default(now())
+  createdAt        DateTime      @default(now())
   Booking          Booking[]
+  WaitingList      WaitingList[]
 }
 
 enum BookingStatus {
@@ -30,6 +31,13 @@ model Booking {
   user      User          @relation(fields: [userId], references: [id]) // Relation to User
   event     Event         @relation(fields: [eventId], references: [id]) // Relation to Event
   createdAt DateTime      @default(now())
+}
+
+model WaitingList {
+  id      String @id @default(uuid())
+  userId  String
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
 }
 
 model User {
