@@ -22,13 +22,11 @@ export const cancelBooking = async (
 				.json({ error: 'Booking not found' });
 		}
 
-		// Cancel the booking
 		await prisma.booking.update({
 			where: { id: bookingId },
 			data: { status: 'cancelled' },
 		});
 
-		// Get the event details to update availableTickets
 		const event = await prisma.event.findUnique({
 			where: { id: booking.eventId },
 		});
@@ -38,14 +36,12 @@ export const cancelBooking = async (
 				.json({ error: 'Event not found' });
 		}
 
-		// Check the waiting list for the event
 		const nextInLine = await prisma.waitingList.findFirst({
 			where: { eventId: booking.eventId },
 			orderBy: { createdAt: 'asc' },
 		});
 
 		if (nextInLine) {
-			// Assign the ticket to the next user in the waiting list
 			await prisma.booking.create({
 				data: {
 					eventId: booking.eventId,
