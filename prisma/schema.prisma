@@ -14,6 +14,7 @@ model Event {
   name            String
   totalTickets    Int
   availableTickets Int
+  createdAt DateTime @default(now())
   bookings        Booking[]
   waitingList     WaitingList[]
 }
