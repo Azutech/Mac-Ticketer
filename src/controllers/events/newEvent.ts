@@ -5,16 +5,18 @@ import { StatusCodes } from 'http-status-codes';
 const eventclient = new PrismaClient().event;
 
 export const createEvent = async (req: Request, res: Response): Promise<any> => {
+
+	const { name, totalTickets } = req.body;
 	try {
-		const { name, totalTickets } = req.body;
+		
 
 		if (!name || typeof name !== 'string' || name.trim() === '') {
-			throw new Error ('Invalid event name' );
+			throw new Error ('Invalid event name');
 			
 		  }
 	  
 		  if (!totalTickets || typeof totalTickets !== 'number' || totalTickets <= 0) {
-			throw new Error ('Invalid number of tickets' );
+			throw new Error ('Invalid number of tickets');
 			
 		  }
 
