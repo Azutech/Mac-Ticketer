@@ -1,29 +1,27 @@
-import express, { Application, Request, Response } from 'express';
-import { StatusCodes } from 'http-status-codes';
-import { config } from 'dotenv';
-
-config();
-
+import app  from './app';
 import { PORT } from './utils/config';
-import { routes } from './routes';
 
-const server: Application = express();
 
-server.use(express.json());
-//
-server.use('/api/v1', routes);
-server.use(express.urlencoded({ extended: true }));
+export class Server {
+    private readonly app;
+  
+    constructor() {
+      this.app = app
+    }
+  
+    async start() {
+      try {
+       
+        this.app.listen(PORT, () => {
+          console.log(`server is running on port ${PORT}`);
+        });
+        console.info('Server started successfully');
+      } catch (error) {
+        console.error(error);
+        process.exit(1);
+      }
+    }
+  }
 
-server.get('/', (req: Request, res: Response) => {
-	res.status(StatusCodes.OK).json({ msg: 'Welcome To Mac-Ticketer 🎫🎫' });
-});
-
-server.get('*', (req: Request, res: Response) => {
-	res.status(StatusCodes.NOT_FOUND).json({ message: 'route not found 🔎' });
-});
-
-server.listen(PORT, () => {
-	console.log(`Mac-Ticketer is listening at http://localhost:${PORT} 🚀🚀`);
-});
-
-export default { server };
+  const server = new Server();
+server.start();

@@ -17,7 +17,7 @@ This project implements a **RESTful API** for an event ticket booking system bui
 
 ## Technologies Used
 
-- **Node.js**: JavaScript runtime environment for building the server.
+- **Node.js**: JavaScript runtime environment for building the app.
 - **Express.js**: Web framework used to create API routes and handle middleware.
 - **Prisma**: ORM for interacting with the RDBMS (PostgreSQL or MySQL).
 - **PostgreSQL / MySQL**: Relational databases supported for storing event and booking data.
