@@ -2,57 +2,67 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { StatusCodes } from 'http-status-codes';
 
-const booking = new PrismaClient().booking;
-const event = new PrismaClient().event;
-const waitingList = new PrismaClient().waitingList;
-const user = new PrismaClient().user;
+const prisma = new PrismaClient();
 
 export const bookTicket = async (req: Request, res: Response): Promise<any> => {
 	const { eventId, userId } = req.body;
 	try {
-		const findevent = await event.findUnique({ where: { id: eventId } });
-		if (!findevent) {
-			throw new Error('Event not found');
-		}
-		const finduser = await user.findUnique({ where: { id: userId } });
-		if (!finduser) {
-			throw new Error('User not found');
-		}
-
-		if (findevent.availableTickets > 0) {
-			await booking.create({
-				data: {
-					eventId,
-					userId,
-					status: 'confirmed',
-				},
-			});
-			await event.update({
+		const result = await prisma.$transaction(async (tx) => {
+			const findEvent = await tx.event.findUnique({
 				where: { id: eventId },
-				data: { availableTickets: findevent.availableTickets - 1 },
 			});
-			return res
-				.status(StatusCodes.CREATED)
-				.json({ message: 'Ticket booked successfully' });
-		} else {
-			await waitingList.create({
-				data: {
-					eventId,
-					userId,
-				},
+			if (!findEvent) {
+				throw new Error('Event not found');
+			}
+
+			const findUser = await tx.user.findUnique({
+				where: { id: userId },
 			});
-			return res.status(200).json({ message: 'Added to waiting list' });
-		}
+			if (!findUser) {
+				throw new Error('User not found');
+			}
+
+			if (findEvent.availableTickets > 0) {
+				const bookingData = await tx.booking.create({
+					data: {
+						eventId,
+						userId,
+						status: 'confirmed',
+					},
+				});
+
+				await tx.event.update({
+					where: { id: eventId },
+					data: { availableTickets: findEvent.availableTickets - 1 },
+				});
+
+				return { message: 'Ticket booked successfully', bookingData };
+			} else {
+				const waitingData = await tx.waitingList.create({
+					data: {
+						eventId,
+						userId,
+					},
+				});
+				return { message: 'Added to waiting list', waitingData };
+			}
+		});
+
+		return res.status(StatusCodes.CREATED).json(result);
+
 	} catch (err: any) {
 		console.dir(err);
+
 		const statusMap: Record<string, number> = {
-			'Event not found ': StatusCodes.BAD_REQUEST,
+			'Event not found': StatusCodes.BAD_REQUEST,
 			'User not found': StatusCodes.BAD_REQUEST,
 		};
 
 		const statusCode = statusMap[err.message]
 			? statusMap[err.message]
 			: StatusCodes.INTERNAL_SERVER_ERROR;
+
 		return res.status(statusCode).json({ error: err.message });
 	}
 };
+
