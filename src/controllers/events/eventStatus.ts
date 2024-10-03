@@ -21,16 +21,27 @@ export const getEventStatus = async (req: Request, res: Response): Promise<any> 
             throw new Error ('Event not found');
 		}
 
-		// Count the number of users in the waiting list for this event
 		const waitingListCount = await prisma.waitingList.count({
 			where: { eventId },
 		});
+
+		const bookings = await prisma.booking.findMany({
+			where: { eventId },
+		});
+
+		const bookingStatuses = bookings.map(booking => booking.status);
+		const latestBookingStatus = bookingStatuses.includes('confirmed') 
+			? 'confirmed' 
+			: bookingStatuses.includes('pending') 
+			? 'pending' 
+			: 'cancelled';
 
 		return res.status(StatusCodes.OK).json({
 			eventName: event.name,
 			totalTickets: event.totalTickets,
 			availableTickets: event.availableTickets,
 			waitingListCount,
+			latestBookingStatus, 
 		});
 	} catch (err: any) {
 		console.error(err);

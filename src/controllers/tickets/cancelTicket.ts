@@ -4,76 +4,79 @@ import { StatusCodes } from 'http-status-codes';
 
 const prisma = new PrismaClient();
 
-export const cancelBooking = async (
-	req: Request,
-	res: Response,
-): Promise<any> => {
+export const cancelBooking = async (req: Request, res: Response): Promise<any> => {
 	const { bookingId } = req.body;
 
 	try {
-		// Find the booking
-		const booking = await prisma.booking.findUnique({
-			where: { id: bookingId },
-		});
-
-		if (!booking) {
-			return res
-				.status(StatusCodes.NOT_FOUND)
-				.json({ error: 'Booking not found' });
-		}
-
-		await prisma.booking.update({
-			where: { id: bookingId },
-			data: { status: 'cancelled' },
-		});
-
-		const event = await prisma.event.findUnique({
-			where: { id: booking.eventId },
-		});
-		if (!event) {
-			return res
-				.status(StatusCodes.NOT_FOUND)
-				.json({ error: 'Event not found' });
-		}
-
-		const nextInLine = await prisma.waitingList.findFirst({
-			where: { eventId: booking.eventId },
-			orderBy: { createdAt: 'asc' },
-		});
-
-		if (nextInLine) {
-			await prisma.booking.create({
-				data: {
-					eventId: booking.eventId,
-					userId: nextInLine.userId,
-					status: 'confirmed',
-				},
+		// Start transaction
+		const result = await prisma.$transaction(async (tx) => {
+			// Find the booking
+			const booking = await tx.booking.findUnique({
+				where: { id: bookingId },
 			});
 
-			// Remove the user from the waiting list
-			await prisma.waitingList.delete({
-				where: { id: nextInLine.id },
+			if (!booking) {
+				throw new Error('Booking not found');
+			}
+
+			// Cancel the booking by updating the status
+			await tx.booking.update({
+				where: { id: bookingId },
+				data: { status: 'cancelled' },
 			});
 
-			res.status(StatusCodes.OK).json({
-				message:
-					'Booking cancelled, ticket assigned to next user in waiting list',
-			});
-		} else {
-			// No one in the waiting list, increase available tickets
-			await prisma.event.update({
+			// Fetch event details
+			const event = await tx.event.findUnique({
 				where: { id: booking.eventId },
-				data: { availableTickets: event.availableTickets + 1 },
 			});
 
-			res.status(StatusCodes.OK).json({
-				message: 'Booking cancelled, ticket returned to pool',
+			if (!event) {
+				throw new Error('Event not found');
+			}
+
+			// Check if there's someone in the waiting list for the event
+			const nextInLine = await tx.waitingList.findFirst({
+				where: { eventId: booking.eventId },
+				orderBy: { createdAt: 'asc' }, // Get the earliest waiting user
 			});
-		}
-	} catch (error) {
-		console.error(error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			error: 'Failed to cancel booking',
+
+			if (nextInLine) {
+				// Assign the ticket to the next user in the waiting list
+				await tx.booking.create({
+					data: {
+						eventId: booking.eventId,
+						userId: nextInLine.userId,
+						status: 'confirmed',
+					},
+				});
+
+				await tx.waitingList.delete({
+					where: { id: nextInLine.id },
+				});
+
+				return res.status(StatusCodes.OK).json({msg: 'Booking cancelled, ticket assigned to next user in waiting list'});
+			} else {
+				await tx.event.update({
+					where: { id: booking.eventId },
+					data: { availableTickets: event.availableTickets + 1 },
+				});
+				return res.status(StatusCodes.OK).json({msg: 'Booking cancelled, ticket returned to pool'});
+			}
 		});
+
+		// Send response based on transaction result
+		res.status(StatusCodes.OK).json({ message: result });
+	} catch (err: any) {
+		console.dir(err);
+
+		const statusMap: Record<string, number> = {
+			'No Booking Tickets found': StatusCodes.BAD_REQUEST,
+		};
+
+		const statusCode = statusMap[err.message]
+			? statusMap[err.message]
+			: StatusCodes.INTERNAL_SERVER_ERROR;
+
+		return res.status(statusCode).json({ error: err.message });
 	}
 };

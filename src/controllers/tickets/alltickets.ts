@@ -14,17 +14,28 @@ export const getAllBookings = async (req: Request, res: Response): Promise<any> 
 			},
 		});
 
+        if (bookings.length === 0)  {
+            throw new Error (' No Booking Tickets found')
+        }
+
 		// Return the list of bookings
 		return res.status(StatusCodes.OK).json({
 			message: 'All bookings retrieved successfully',
 			data: bookings,
 		});
-	} catch (error) {
-		console.error(error);
+	} catch (err: any) {
 
-		// Return an error response if the query fails
-		return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			error: 'Failed to retrieve bookings',
-		});
+        console.dir(err);
+
+		const statusMap: Record<string, number> = {
+			'No Booking Tickets found': StatusCodes.BAD_REQUEST,
+		};
+
+		const statusCode = statusMap[err.message]
+			? statusMap[err.message]
+			: StatusCodes.INTERNAL_SERVER_ERROR;
+
+		return res.status(statusCode).json({ error: err.message });
+
 	}
 };
