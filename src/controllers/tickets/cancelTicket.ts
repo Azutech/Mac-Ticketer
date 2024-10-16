@@ -54,23 +54,29 @@ export const cancelBooking = async (req: Request, res: Response): Promise<any> =
 					where: { id: nextInLine.id },
 				});
 
-				return res.status(StatusCodes.OK).json({msg: 'Booking cancelled, ticket assigned to next user in waiting list'});
+				// Return message for response
+				return 'Booking cancelled, ticket assigned to next user in waiting list';
 			} else {
+				// Increase the available tickets if no one is in the waiting list
 				await tx.event.update({
 					where: { id: booking.eventId },
 					data: { availableTickets: event.availableTickets + 1 },
 				});
-				return res.status(StatusCodes.OK).json({msg: 'Booking cancelled, ticket returned to pool'});
+
+				// Return message for response
+				return 'Booking cancelled, ticket returned to pool';
 			}
 		});
 
-		// Send response based on transaction result
+		// Send response after transaction completes
 		res.status(StatusCodes.OK).json({ message: result });
 	} catch (err: any) {
 		console.dir(err);
 
+		// Custom status codes for specific errors
 		const statusMap: Record<string, number> = {
-			'No Booking Tickets found': StatusCodes.BAD_REQUEST,
+			'Booking not found': StatusCodes.NOT_FOUND,
+			'Event not found': StatusCodes.NOT_FOUND,
 		};
 
 		const statusCode = statusMap[err.message]
