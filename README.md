@@ -31,6 +31,7 @@ To install the project, follow these steps:
 -  Change to the project directory: `cd project`
 -  Install the dependencies: `npm install`
 -  Run the project: `npm run dev`
+-  Test the APIs: `npm run test`
 
 
 ## Contributing
@@ -48,7 +49,7 @@ To contribute to the project, you can:
 
  ## PostMan Documentation
 
- Click this [link](https://documenter.getpostman.com/view/19569197/2sAXqqd3QU#5da4db40-b7a1-42dd-9b86-dcf98d94cdb7) to get the full API Documentation 
+ Click this [link](https://documenter.getpostman.com/view/19569197/2sAXxV5pkP) to get the full API Documentation 
 
 
 ## License

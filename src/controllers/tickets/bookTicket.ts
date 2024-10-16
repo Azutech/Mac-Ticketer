@@ -54,8 +54,8 @@ export const bookTicket = async (req: Request, res: Response): Promise<any> => {
 		console.dir(err);
 
 		const statusMap: Record<string, number> = {
-			'Event not found': StatusCodes.BAD_REQUEST,
-			'User not found': StatusCodes.BAD_REQUEST,
+			'Event not found': StatusCodes.NOT_FOUND,
+			'User not found': StatusCodes.NOT_FOUND,
 		};
 
 		const statusCode = statusMap[err.message]

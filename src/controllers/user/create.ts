@@ -9,11 +9,11 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
 		const { email, name } = req.body;
 
 		if (!name || typeof name !== 'string' || name.trim() === '') {
-			throw new Error('Invalid event name');
+			throw new Error('Invalid user name');
 		}
 
 		if (!email || typeof email !== 'string' || name.trim() === '') {
-			throw new Error('Invalid number of email');
+			throw new Error('Invalid user email');
 		}
 
 		const user = await prisma.create({
